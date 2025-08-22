@@ -4,6 +4,7 @@ import { USAMap } from '@/components/USAMap';
 import { QuizDialog } from '@/components/QuizDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Trophy, MapPin } from '@phosphor-icons/react';
 import { type StateInfo } from '@/lib/states';
 import { getQuizForState } from '@/lib/quizData';
