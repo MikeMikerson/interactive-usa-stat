@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Trophy, MapPin } from '@phosphor-icons/react';
 import { type StateInfo } from '@/lib/states';
-import { getQuizForState } from '@/lib/quizData';
+import { getQuizForState, quizData } from '@/lib/quizData';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 
@@ -52,6 +52,8 @@ function App() {
   };
 
   const totalStatesCompleted = completedStates.size;
+  const totalAvailableStates = quizData.length; // Dynamic count of states with quizzes
+  const completionPercentage = totalAvailableStates > 0 ? Math.round((totalStatesCompleted / totalAvailableStates) * 100) : 0;
   const totalScore = Object.values(stateScores).reduce((sum, score) => sum + score.score, 0);
   const totalQuestions = Object.values(stateScores).reduce((sum, score) => sum + score.totalQuestions, 0);
   const averagePercentage = totalQuestions > 0 ? Math.round((totalScore / totalQuestions) * 100) : 0;
@@ -68,7 +70,7 @@ function App() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">States Completed</CardTitle>
@@ -77,7 +79,20 @@ function App() {
             <CardContent>
               <div className="text-2xl font-bold">{totalStatesCompleted}</div>
               <p className="text-xs text-muted-foreground">
-                out of 51 states & territories
+                out of {totalAvailableStates} available quizzes
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Progress</CardTitle>
+              <Badge variant="secondary">{completionPercentage}%</Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{completionPercentage}%</div>
+              <p className="text-xs text-muted-foreground">
+                states completed
               </p>
             </CardContent>
           </Card>
