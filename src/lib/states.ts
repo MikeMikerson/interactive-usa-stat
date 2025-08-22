@@ -1,7 +1,7 @@
 export interface StateInfo {
   name: string;
   abbreviation: string;
-  path: string;
+  path?: string; // Optional since we're using the uploaded SVG
 }
 
 export const stateData: StateInfo[] = [
