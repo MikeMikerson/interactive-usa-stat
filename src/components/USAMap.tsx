@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { type StateInfo } from '@/lib/states';
 import { cn } from '@/lib/utils';
 import usSvgUrl from '@/assets/images/us.svg';
@@ -122,7 +122,7 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
       });
   }, [completedStates]);
 
-  const handleStateClick = (stateId: string) => {
+  const handleStateClick = useCallback((stateId: string) => {
     console.log('handleStateClick called with:', stateId);
     const stateName = stateNameMap[stateId];
     console.log('State name:', stateName);
@@ -134,7 +134,7 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
       console.log('Calling onStateClick with:', stateInfo);
       onStateClick(stateInfo);
     }
-  };
+  }, [onStateClick]);
 
 
 
@@ -147,6 +147,11 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
 
     console.log('Setting up event listeners on SVG');
 
+    // Store the listener functions so we can remove them properly
+    const clickListeners = new Map<Element, () => void>();
+    const mouseEnterListeners = new Map<Element, () => void>();
+    const mouseLeaveListeners = new Map<Element, () => void>();
+
     // Add click listener to all path elements directly
     const allPaths = svgElement.querySelectorAll('path[id]');
     console.log('Found paths with IDs:', allPaths.length);
@@ -155,28 +160,39 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
       const stateId = path.id;
       if (stateNameMap[stateId]) {
         console.log('Adding click listener to:', stateId);
-        path.addEventListener('click', () => {
+        
+        const clickHandler = () => {
           console.log('Direct click on path:', stateId);
           handleStateClick(stateId);
-        });
+        };
         
-        path.addEventListener('mouseenter', () => setHoveredState(stateId));
-        path.addEventListener('mouseleave', () => setHoveredState(null));
+        const mouseEnterHandler = () => setHoveredState(stateId);
+        const mouseLeaveHandler = () => setHoveredState(null);
+        
+        // Store references for cleanup
+        clickListeners.set(path, clickHandler);
+        mouseEnterListeners.set(path, mouseEnterHandler);
+        mouseLeaveListeners.set(path, mouseLeaveHandler);
+        
+        path.addEventListener('click', clickHandler);
+        path.addEventListener('mouseenter', mouseEnterHandler);
+        path.addEventListener('mouseleave', mouseLeaveHandler);
       }
     });
 
     // Cleanup function
     return () => {
       allPaths.forEach((path) => {
-        const stateId = path.id;
-        if (stateNameMap[stateId]) {
-          path.removeEventListener('click', () => handleStateClick(stateId));
-          path.removeEventListener('mouseenter', () => setHoveredState(stateId));
-          path.removeEventListener('mouseleave', () => setHoveredState(null));
-        }
+        const clickHandler = clickListeners.get(path);
+        const mouseEnterHandler = mouseEnterListeners.get(path);
+        const mouseLeaveHandler = mouseLeaveListeners.get(path);
+        
+        if (clickHandler) path.removeEventListener('click', clickHandler);
+        if (mouseEnterHandler) path.removeEventListener('mouseenter', mouseEnterHandler);
+        if (mouseLeaveHandler) path.removeEventListener('mouseleave', mouseLeaveHandler);
       });
     };
-  }, [svgContent]);
+  }, [svgContent, handleStateClick]);
 
   // Separate effect for updating fill colors
   useEffect(() => {

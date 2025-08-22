@@ -25,9 +25,10 @@ function App() {
 
   const handleStateClick = (state: StateInfo) => {
     console.log('App handleStateClick called with:', state);
+    console.log('Quiz data for state:', getQuizForState(state.name));
     setSelectedState(state);
     setQuizOpen(true);
-    console.log('Quiz should be opening...');
+    console.log('Quiz should be opening..., quizOpen will be:', true);
   };
 
   const handleQuizComplete = (score: number) => {
@@ -114,6 +115,20 @@ function App() {
         {/* Map */}
         <Card className="mb-8">
           <CardContent className="p-6">
+            {/* Test button to debug dialog */}
+            <div className="mb-4 text-center">
+              <Button 
+                onClick={() => {
+                  console.log('Test button clicked - opening Hawaii quiz');
+                  const hawaiiState: StateInfo = { name: 'Hawaii', abbreviation: 'HI' };
+                  setSelectedState(hawaiiState);
+                  setQuizOpen(true);
+                }}
+                variant="outline"
+              >
+                Test Hawaii Quiz (Debug)
+              </Button>
+            </div>
             <USAMap 
               onStateClick={handleStateClick}
               completedStates={completedStates}
@@ -147,9 +162,13 @@ function App() {
       </div>
 
       {/* Quiz Dialog */}
+      {console.log('About to render QuizDialog with:', { open: quizOpen, selectedState: selectedState?.name })}
       <QuizDialog
         open={quizOpen}
-        onOpenChange={setQuizOpen}
+        onOpenChange={(open) => {
+          console.log('Dialog onOpenChange called with:', open);
+          setQuizOpen(open);
+        }}
         stateName={selectedState?.name || 'Unknown State'}
         quiz={selectedState ? getQuizForState(selectedState.name) : null}
         onQuizComplete={handleQuizComplete}
