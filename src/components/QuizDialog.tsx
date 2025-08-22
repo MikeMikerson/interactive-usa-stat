@@ -33,7 +33,8 @@ export function QuizDialog({ open, onOpenChange, stateName, quiz, onQuizComplete
     }
   }, [open, quiz]);
 
-  if (!quiz) {
+  // Always show dialog, but with different content based on quiz availability
+  if (!quiz || !quiz.questions || quiz.questions.length === 0) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">

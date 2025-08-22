@@ -148,7 +148,7 @@ function App() {
       <QuizDialog
         open={quizOpen}
         onOpenChange={setQuizOpen}
-        stateName={selectedState?.name || ''}
+        stateName={selectedState?.name || 'Unknown State'}
         quiz={selectedState ? getQuizForState(selectedState.name) : null}
         onQuizComplete={handleQuizComplete}
       />

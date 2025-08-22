@@ -133,44 +133,40 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
     const svgElement = container.querySelector('svg');
     if (!svgElement) return;
 
-    // Find all state paths and add interactivity - only do this once
-    Object.keys(stateNameMap).forEach(stateId => {
-      const path = svgElement.querySelector(`#${stateId}`);
-      if (path) {
-        // Add event listeners
-        const handleMouseEnter = () => {
-          setHoveredState(stateId);
-        };
-        
-        const handleMouseLeave = () => {
-          setHoveredState(null);
-        };
-        
-        const handleClick = () => {
+    // Use event delegation instead of individual listeners
+    const handleSvgClick = (event: Event) => {
+      const target = event.target as Element;
+      const pathElement = target.closest('path');
+      if (pathElement && pathElement.id) {
+        const stateId = pathElement.id;
+        if (stateNameMap[stateId]) {
           handleStateClick(stateId);
-        };
-
-        path.addEventListener('mouseenter', handleMouseEnter);
-        path.addEventListener('mouseleave', handleMouseLeave);
-        path.addEventListener('click', handleClick);
-
-        // Store cleanup functions
-        (path as any).__cleanupHandlers = () => {
-          path.removeEventListener('mouseenter', handleMouseEnter);
-          path.removeEventListener('mouseleave', handleMouseLeave);
-          path.removeEventListener('click', handleClick);
-        };
+        }
       }
-    });
+    };
+
+    const handleSvgMouseMove = (event: Event) => {
+      const target = event.target as Element;
+      const pathElement = target.closest('path');
+      if (pathElement && pathElement.id) {
+        const stateId = pathElement.id;
+        if (stateNameMap[stateId]) {
+          setHoveredState(stateId);
+        }
+      } else {
+        setHoveredState(null);
+      }
+    };
+
+    svgElement.addEventListener('click', handleSvgClick);
+    svgElement.addEventListener('mousemove', handleSvgMouseMove);
+    svgElement.addEventListener('mouseleave', () => setHoveredState(null));
 
     // Cleanup function
     return () => {
-      Object.keys(stateNameMap).forEach(stateId => {
-        const path = svgElement.querySelector(`#${stateId}`);
-        if (path && (path as any).__cleanupHandlers) {
-          (path as any).__cleanupHandlers();
-        }
-      });
+      svgElement.removeEventListener('click', handleSvgClick);
+      svgElement.removeEventListener('mousemove', handleSvgMouseMove);
+      svgElement.removeEventListener('mouseleave', () => setHoveredState(null));
     };
   }, [svgContent]);
 
