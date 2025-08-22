@@ -24,8 +24,10 @@ function App() {
   const completedStates = new Set(Object.keys(stateScores));
 
   const handleStateClick = (state: StateInfo) => {
+    console.log('App handleStateClick called with:', state);
     setSelectedState(state);
     setQuizOpen(true);
+    console.log('Quiz should be opening...');
   };
 
   const handleQuizComplete = (score: number) => {

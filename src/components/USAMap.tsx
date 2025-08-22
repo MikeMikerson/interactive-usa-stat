@@ -74,22 +74,29 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
     fetch(usSvgUrl)
       .then(response => response.text())
       .then(svgText => {
+        console.log('SVG loaded successfully');
         // Process the SVG to add interactivity
         const parser = new DOMParser();
         const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
         const svgElement = svgDoc.querySelector('svg');
         
         if (svgElement) {
+          console.log('SVG element found');
           // Set responsive attributes
           svgElement.setAttribute('width', '100%');
           svgElement.setAttribute('height', 'auto');
           svgElement.style.maxHeight = '70vh';
           svgElement.style.cursor = 'pointer';
           
+          // Find all path elements and log them
+          const allPaths = svgElement.querySelectorAll('path');
+          console.log('Total paths found:', allPaths.length);
+          
           // Update all state paths with proper styling
           Object.keys(stateNameMap).forEach(stateId => {
             const path = svgElement.querySelector(`#${stateId}`);
             if (path) {
+              console.log('Found path for state:', stateId);
               path.style.transition = 'all 0.2s ease';
               path.style.strokeWidth = '0.97px';
               path.style.stroke = 'hsl(var(--border))';
@@ -100,6 +107,8 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
               const stateName = stateNameMap[stateId];
               const isCompleted = stateName && completedStates.has(stateName);
               path.style.fill = isCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--muted))';
+            } else {
+              console.log('No path found for state:', stateId);
             }
           });
           
@@ -114,12 +123,15 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
   }, [completedStates]);
 
   const handleStateClick = (stateId: string) => {
+    console.log('handleStateClick called with:', stateId);
     const stateName = stateNameMap[stateId];
+    console.log('State name:', stateName);
     if (stateName) {
       const stateInfo: StateInfo = {
         name: stateName,
         abbreviation: stateId
       };
+      console.log('Calling onStateClick with:', stateInfo);
       onStateClick(stateInfo);
     }
   };
@@ -133,40 +145,36 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
     const svgElement = container.querySelector('svg');
     if (!svgElement) return;
 
-    // Use event delegation instead of individual listeners
-    const handleSvgClick = (event: Event) => {
-      const target = event.target as Element;
-      const pathElement = target.closest('path');
-      if (pathElement && pathElement.id) {
-        const stateId = pathElement.id;
-        if (stateNameMap[stateId]) {
+    console.log('Setting up event listeners on SVG');
+
+    // Add click listener to all path elements directly
+    const allPaths = svgElement.querySelectorAll('path[id]');
+    console.log('Found paths with IDs:', allPaths.length);
+    
+    allPaths.forEach((path) => {
+      const stateId = path.id;
+      if (stateNameMap[stateId]) {
+        console.log('Adding click listener to:', stateId);
+        path.addEventListener('click', () => {
+          console.log('Direct click on path:', stateId);
           handleStateClick(stateId);
-        }
+        });
+        
+        path.addEventListener('mouseenter', () => setHoveredState(stateId));
+        path.addEventListener('mouseleave', () => setHoveredState(null));
       }
-    };
-
-    const handleSvgMouseMove = (event: Event) => {
-      const target = event.target as Element;
-      const pathElement = target.closest('path');
-      if (pathElement && pathElement.id) {
-        const stateId = pathElement.id;
-        if (stateNameMap[stateId]) {
-          setHoveredState(stateId);
-        }
-      } else {
-        setHoveredState(null);
-      }
-    };
-
-    svgElement.addEventListener('click', handleSvgClick);
-    svgElement.addEventListener('mousemove', handleSvgMouseMove);
-    svgElement.addEventListener('mouseleave', () => setHoveredState(null));
+    });
 
     // Cleanup function
     return () => {
-      svgElement.removeEventListener('click', handleSvgClick);
-      svgElement.removeEventListener('mousemove', handleSvgMouseMove);
-      svgElement.removeEventListener('mouseleave', () => setHoveredState(null));
+      allPaths.forEach((path) => {
+        const stateId = path.id;
+        if (stateNameMap[stateId]) {
+          path.removeEventListener('click', () => handleStateClick(stateId));
+          path.removeEventListener('mouseenter', () => setHoveredState(stateId));
+          path.removeEventListener('mouseleave', () => setHoveredState(null));
+        }
+      });
     };
   }, [svgContent]);
 
