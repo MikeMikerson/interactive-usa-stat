@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { type StateInfo } from '@/lib/states';
 import { cn } from '@/lib/utils';
+import usSvgUrl from '@/assets/images/us.svg';
 
 interface USAMapProps {
   onStateClick: (state: StateInfo) => void;
@@ -70,7 +71,7 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
 
   useEffect(() => {
     // Load the SVG content from the assets directory
-    fetch('/src/assets/images/us.svg')
+    fetch(usSvgUrl)
       .then(response => response.text())
       .then(svgText => {
         // Process the SVG to add interactivity
@@ -123,15 +124,7 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
     }
   };
 
-  const getStateFill = (stateId: string) => {
-    const stateName = stateNameMap[stateId];
-    const isCompleted = stateName && completedStates.has(stateName);
-    const isHovered = hoveredState === stateId;
-    
-    if (isCompleted) return 'hsl(var(--secondary))';
-    if (isHovered) return 'hsl(var(--primary))';
-    return 'hsl(var(--muted))';
-  };
+
 
   useEffect(() => {
     if (!svgContent || !containerRef.current) return;
@@ -140,19 +133,17 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
     const svgElement = container.querySelector('svg');
     if (!svgElement) return;
 
-    // Find all state paths and add interactivity
+    // Find all state paths and add interactivity - only do this once
     Object.keys(stateNameMap).forEach(stateId => {
       const path = svgElement.querySelector(`#${stateId}`);
       if (path) {
         // Add event listeners
         const handleMouseEnter = () => {
           setHoveredState(stateId);
-          path.style.fill = getStateFill(stateId);
         };
         
         const handleMouseLeave = () => {
           setHoveredState(null);
-          path.style.fill = getStateFill(stateId);
         };
         
         const handleClick = () => {
@@ -183,7 +174,7 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
     };
   }, [svgContent]);
 
-  // Update fills when completedStates or hoveredState changes
+  // Separate effect for updating fill colors
   useEffect(() => {
     if (!containerRef.current) return;
     
@@ -193,10 +184,20 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
     Object.keys(stateNameMap).forEach(stateId => {
       const path = svgElement.querySelector(`#${stateId}`);
       if (path) {
-        path.style.fill = getStateFill(stateId);
+        const stateName = stateNameMap[stateId];
+        const isCompleted = stateName && completedStates.has(stateName);
+        const isHovered = hoveredState === stateId;
+        
+        let fill = 'hsl(var(--muted))';
+        if (isCompleted) fill = 'hsl(var(--secondary))';
+        else if (isHovered) fill = 'hsl(var(--primary))';
+        
+        path.style.fill = fill;
       }
     });
   }, [completedStates, hoveredState]);
+
+
 
   if (!svgContent) {
     return (
