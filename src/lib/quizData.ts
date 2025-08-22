@@ -252,6 +252,47 @@ export const quizData: StateQuiz[] = [
         explanation: "Oregon's motto 'Alis Volat Propriis' translates to 'She Flies With Her Own Wings.'"
       }
     ]
+  },
+  {
+    state: "Hawaii",
+    questions: [
+      {
+        question: "What is the capital of Hawaii?",
+        options: ["Hilo", "Honolulu", "Kailua", "Pearl City"],
+        correctAnswer: 1,
+        explanation: "Honolulu, located on the island of Oahu, has been Hawaii's capital since statehood in 1959."
+      },
+      {
+        question: "What is Hawaii's state nickname?",
+        options: ["The Aloha State", "The Paradise State", "The Island State", "The Tropical State"],
+        correctAnswer: 0,
+        explanation: "Hawaii is known as 'The Aloha State' from the Hawaiian word 'aloha' meaning love, peace, and compassion."
+      },
+      {
+        question: "How many main islands make up the Hawaiian island chain?",
+        options: ["6", "8", "10", "12"],
+        correctAnswer: 1,
+        explanation: "Hawaii consists of 8 main islands: Hawaiʻi (Big Island), Maui, Oʻahu, Kauaʻi, Molokaʻi, Lānaʻi, Niʻihau, and Kahoʻolawe."
+      },
+      {
+        question: "Which Hawaiian island is known as the 'Big Island'?",
+        options: ["Oahu", "Maui", "Hawaii", "Kauai"],
+        correctAnswer: 2,
+        explanation: "The island of Hawaii is called the 'Big Island' because it's the largest island in the Hawaiian chain."
+      },
+      {
+        question: "What is Hawaii's state flower?",
+        options: ["Plumeria", "Hibiscus", "Bird of Paradise", "Orchid"],
+        correctAnswer: 1,
+        explanation: "The yellow hibiscus (Hibiscus brackenridgei) is Hawaii's official state flower."
+      },
+      {
+        question: "Which volcano in Hawaii is one of the most active in the world?",
+        options: ["Mauna Loa", "Kilauea", "Mauna Kea", "Diamond Head"],
+        correctAnswer: 1,
+        explanation: "Kilauea volcano has been erupting continuously since 1983, making it one of the world's most active volcanoes."
+      }
+    ]
   }
 ];
 
