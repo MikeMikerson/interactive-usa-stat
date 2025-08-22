@@ -146,43 +146,51 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
     const svgElement = container.querySelector('svg');
     if (!svgElement) return;
 
-    // Simplified event handling - directly add click listeners to each state path
+    // Add a single click handler to the SVG element using event delegation
+    const handleSVGClick = (event: Event) => {
+      const target = event.target as Element;
+      if (target && target.tagName === 'path') {
+        const stateId = target.getAttribute('id');
+        console.log('SVG click detected on element with ID:', stateId);
+        if (stateId && stateNameMap[stateId]) {
+          console.log(`Clicked on ${stateId} - ${stateNameMap[stateId]}`);
+          handleStateClick(stateId);
+        }
+      }
+    };
+
+    const handleSVGMouseOver = (event: Event) => {
+      const target = event.target as Element;
+      if (target && target.tagName === 'path') {
+        const stateId = target.getAttribute('id');
+        if (stateId && stateNameMap[stateId]) {
+          setHoveredState(stateId);
+        }
+      }
+    };
+
+    const handleSVGMouseOut = () => {
+      setHoveredState(null);
+    };
+
+    svgElement.addEventListener('click', handleSVGClick);
+    svgElement.addEventListener('mouseover', handleSVGMouseOver);
+    svgElement.addEventListener('mouseout', handleSVGMouseOut);
+
+    // Also set cursor style on all state paths
     Object.keys(stateNameMap).forEach(stateId => {
       const path = svgElement.querySelector(`#${stateId}`);
       if (path) {
-        console.log(`Adding event listeners to ${stateId} (${stateNameMap[stateId]})`);
-        
-        const clickHandler = () => {
-          console.log(`Clicked on ${stateId} - ${stateNameMap[stateId]}`);
-          handleStateClick(stateId);
-        };
-        
-        const mouseEnterHandler = () => setHoveredState(stateId);
-        const mouseLeaveHandler = () => setHoveredState(null);
-        
-        path.addEventListener('click', clickHandler);
-        path.addEventListener('mouseenter', mouseEnterHandler);
-        path.addEventListener('mouseleave', mouseLeaveHandler);
-        
-        // Store handlers for cleanup
-        (path as any)._clickHandler = clickHandler;
-        (path as any)._mouseEnterHandler = mouseEnterHandler;
-        (path as any)._mouseLeaveHandler = mouseLeaveHandler;
-      } else {
-        console.log(`No path found for state: ${stateId}`);
+        console.log(`Setting cursor for ${stateId}`);
+        (path as HTMLElement).style.cursor = 'pointer';
       }
     });
 
-    // Cleanup function
+    // Cleanup
     return () => {
-      Object.keys(stateNameMap).forEach(stateId => {
-        const path = svgElement.querySelector(`#${stateId}`);
-        if (path && (path as any)._clickHandler) {
-          path.removeEventListener('click', (path as any)._clickHandler);
-          path.removeEventListener('mouseenter', (path as any)._mouseEnterHandler);
-          path.removeEventListener('mouseleave', (path as any)._mouseLeaveHandler);
-        }
-      });
+      svgElement.removeEventListener('click', handleSVGClick);
+      svgElement.removeEventListener('mouseover', handleSVGMouseOver);
+      svgElement.removeEventListener('mouseout', handleSVGMouseOut);
     };
   }, [svgContent, handleStateClick]);
 
