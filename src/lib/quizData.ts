@@ -194,6 +194,64 @@ export const quizData: StateQuiz[] = [
         explanation: "Denver is called 'The Mile High City' because its elevation is approximately 5,280 feet (one mile) above sea level."
       }
     ]
+  },
+  {
+    state: "Washington",
+    questions: [
+      {
+        question: "What is the capital of Washington?",
+        options: ["Seattle", "Spokane", "Olympia", "Tacoma"],
+        correctAnswer: 2,
+        explanation: "Olympia has been Washington's capital since statehood in 1889."
+      },
+      {
+        question: "What is Washington's state nickname?",
+        options: ["The Evergreen State", "The Rainy State", "The Pacific State", "The Apple State"],
+        correctAnswer: 0,
+        explanation: "Washington is called 'The Evergreen State' for its abundant evergreen forests."
+      },
+      {
+        question: "Which mountain range runs through Washington?",
+        options: ["Rocky Mountains", "Appalachian Mountains", "Cascade Range", "Sierra Nevada"],
+        correctAnswer: 2,
+        explanation: "The Cascade Range runs north-south through Washington, including Mount Rainier and Mount Baker."
+      },
+      {
+        question: "What major technology company was founded in Washington?",
+        options: ["Apple", "Google", "Microsoft", "Facebook"],
+        correctAnswer: 2,
+        explanation: "Microsoft was founded in Albuquerque but moved to and is headquartered in Redmond, Washington."
+      }
+    ]
+  },
+  {
+    state: "Oregon",
+    questions: [
+      {
+        question: "What is the capital of Oregon?",
+        options: ["Portland", "Eugene", "Salem", "Bend"],
+        correctAnswer: 2,
+        explanation: "Salem has been Oregon's capital since 1851."
+      },
+      {
+        question: "What is Oregon's state nickname?",
+        options: ["The Beaver State", "The Pine State", "The Pacific State", "The Trail State"],
+        correctAnswer: 0,
+        explanation: "Oregon is called 'The Beaver State' after the state animal and its historical fur trade."
+      },
+      {
+        question: "Which famous trail ended in Oregon?",
+        options: ["Santa Fe Trail", "Oregon Trail", "California Trail", "Mormon Trail"],
+        correctAnswer: 1,
+        explanation: "The Oregon Trail was a 2,170-mile wagon route that brought pioneers to Oregon Territory."
+      },
+      {
+        question: "What is Oregon's state motto?",
+        options: ["She Flies With Her Own Wings", "Union", "Live Free or Die", "The People Rule"],
+        correctAnswer: 0,
+        explanation: "Oregon's motto 'Alis Volat Propriis' translates to 'She Flies With Her Own Wings.'"
+      }
+    ]
   }
 ];
 
