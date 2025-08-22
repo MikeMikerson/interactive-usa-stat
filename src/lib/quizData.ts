@@ -1190,6 +1190,29 @@ export const quizData: StateQuiz[] = [
         explanation: "Wyoming was first to grant women voting rights (1869), first female governor, and many other women's firsts."
       }
     ]
+  },
+  {
+    state: "District of Columbia",
+    questions: [
+      {
+        question: "What is the capital building located in Washington, D.C.?",
+        options: ["White House", "Capitol Building", "Supreme Court", "Pentagon"],
+        correctAnswer: 1,
+        explanation: "The Capitol Building houses the U.S. Congress and is located on Capitol Hill."
+      },
+      {
+        question: "What river borders Washington, D.C.?",
+        options: ["Potomac River", "Anacostia River", "Both A and B", "James River"],
+        correctAnswer: 2,
+        explanation: "Washington, D.C. is bordered by both the Potomac and Anacostia rivers."
+      },
+      {
+        question: "When was Washington, D.C. established as the nation's capital?",
+        options: ["1790", "1800", "1776", "1787"],
+        correctAnswer: 0,
+        explanation: "The Residence Act of 1790 established Washington, D.C. as the permanent national capital."
+      }
+    ]
   }
 ];
 

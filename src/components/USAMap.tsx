@@ -96,6 +96,12 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
         svgElement.style.height = 'auto';
         svgElement.style.display = 'block';
         svgElement.style.maxHeight = '70vh';
+        
+        // Remove any existing fill attribute to ensure our styles take precedence
+        svgElement.removeAttribute('fill');
+        
+        // Ensure the SVG itself doesn't interfere with clicks
+        svgElement.style.pointerEvents = 'none';
 
         // Add styles to state paths
         const statePaths = svgElement.querySelectorAll('path[id]');
@@ -109,35 +115,42 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
 
           console.log(`Processing state: ${stateCode} -> ${stateName}, hasQuiz: ${!!hasQuiz}`);
 
-          if (hasQuiz) {
+          // Set basic styling for all paths
+          path.style.stroke = 'hsl(var(--border))';
+          path.style.strokeWidth = '1px';
+          path.style.strokeLinejoin = 'round';
+          path.style.transition = 'fill 0.2s ease';
+          
+          // Ensure the entire path area is clickable
+          path.style.pointerEvents = 'all';
+
+          if (hasQuiz && stateName) {
             path.style.cursor = 'pointer';
             const isCompleted = completedStates.has(stateName);
             path.style.fill = isCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--primary))';
             path.setAttribute('data-interactive', 'true');
-            path.style.transition = 'fill 0.2s ease';
+            path.setAttribute('data-state-name', stateName);
+            
+            console.log(`Made ${stateName} interactive with fill: ${path.style.fill}`);
+            
+            // Add hover effects
+            path.addEventListener('mouseenter', () => {
+              const currentCompleted = completedStates.has(stateName);
+              path.style.fill = currentCompleted ? 'hsl(var(--secondary)/0.8)' : 'hsl(var(--primary)/0.8)';
+              path.style.strokeWidth = '2px';
+            });
+
+            path.addEventListener('mouseleave', () => {
+              const currentCompleted = completedStates.has(stateName);
+              path.style.fill = currentCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--primary))';
+              path.style.strokeWidth = '1px';
+            });
           } else {
             path.style.fill = 'hsl(var(--muted))';
             path.style.cursor = 'default';
+            path.removeAttribute('data-interactive');
+            console.log(`No quiz for ${stateCode}, filled with muted color`);
           }
-
-          path.style.stroke = 'hsl(var(--border))';
-          path.style.strokeWidth = '0.97px';
-          path.style.strokeLinejoin = 'round';
-
-          // Add hover effects
-          path.addEventListener('mouseenter', () => {
-            if (hasQuiz) {
-              const isCompleted = completedStates.has(stateName);
-              path.style.fill = isCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--primary)/0.8)';
-            }
-          });
-
-          path.addEventListener('mouseleave', () => {
-            if (hasQuiz) {
-              const isCompleted = completedStates.has(stateName);
-              path.style.fill = isCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--primary))';
-            }
-          });
         });
 
         // Serialize back to string
@@ -160,19 +173,23 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
     const target = event.target as HTMLElement;
     console.log('Click detected on:', target.tagName, 'ID:', target.id);
     
-    if (target.tagName === 'path' && target.getAttribute('data-interactive')) {
+    if (target.tagName.toLowerCase() === 'path' && target.id) {
       const stateCode = target.id;
       const stateName = stateNameMap[stateCode];
-      console.log(`Clicked on interactive state: ${stateCode} -> ${stateName}`);
+      console.log(`Clicked on state: ${stateCode} -> ${stateName}`);
       
-      if (stateName) {
+      if (stateName && getQuizForState(stateName)) {
         const stateInfo: StateInfo = {
           name: stateName,
           abbreviation: stateCode
         };
         console.log('Calling onStateClick with:', stateInfo);
         onStateClick(stateInfo);
+      } else {
+        console.log('No quiz available for this state');
       }
+    } else {
+      console.log('Click not on a valid state path');
     }
   };
 
@@ -216,16 +233,16 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-muted border border-border rounded-sm"></div>
-          <span className="text-muted-foreground">No Quiz Available</span>
-        </div>
-        <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-primary rounded-sm"></div>
           <span className="text-muted-foreground">Quiz Available</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-secondary rounded-sm"></div>
           <span className="text-muted-foreground">Completed</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-muted border border-border rounded-sm"></div>
+          <span className="text-muted-foreground">No Quiz Data</span>
         </div>
       </div>
     </div>

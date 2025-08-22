@@ -77,7 +77,7 @@ function App() {
             <CardContent>
               <div className="text-2xl font-bold">{totalStatesCompleted}</div>
               <p className="text-xs text-muted-foreground">
-                out of 50 states
+                out of 51 states & territories
               </p>
             </CardContent>
           </Card>
