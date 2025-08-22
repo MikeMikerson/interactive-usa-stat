@@ -127,7 +127,8 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
           if (hasQuiz && stateName) {
             path.style.cursor = 'pointer';
             const isCompleted = completedStates.has(stateName);
-            path.style.fill = isCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--primary))';
+            // Blue for available, green for completed
+            path.style.fill = isCompleted ? '#10b981' : '#3b82f6';
             path.setAttribute('data-interactive', 'true');
             path.setAttribute('data-state-name', stateName);
             
@@ -136,17 +137,17 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
             // Add hover effects
             path.addEventListener('mouseenter', () => {
               const currentCompleted = completedStates.has(stateName);
-              path.style.fill = currentCompleted ? 'hsl(var(--secondary)/0.8)' : 'hsl(var(--primary)/0.8)';
+              path.style.fill = currentCompleted ? '#059669' : '#2563eb'; // Darker on hover
               path.style.strokeWidth = '2px';
             });
 
             path.addEventListener('mouseleave', () => {
               const currentCompleted = completedStates.has(stateName);
-              path.style.fill = currentCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--primary))';
+              path.style.fill = currentCompleted ? '#10b981' : '#3b82f6'; // Back to original
               path.style.strokeWidth = '1px';
             });
           } else {
-            path.style.fill = 'hsl(var(--muted))';
+            path.style.fill = '#e5e7eb'; // Light grey for no quiz data
             path.style.cursor = 'default';
             path.removeAttribute('data-interactive');
             console.log(`No quiz for ${stateCode}, filled with muted color`);
@@ -233,15 +234,15 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-primary rounded-sm"></div>
+          <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: '#3b82f6' }}></div>
           <span className="text-muted-foreground">Quiz Available</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-secondary rounded-sm"></div>
+          <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: '#10b981' }}></div>
           <span className="text-muted-foreground">Completed</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-muted border border-border rounded-sm"></div>
+          <div className="w-4 h-4 bg-gray-200 border border-gray-300 rounded-sm"></div>
           <span className="text-muted-foreground">No Quiz Data</span>
         </div>
       </div>
