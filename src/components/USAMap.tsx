@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { type StateInfo } from '@/lib/states';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { getQuizForState } from '@/lib/quizData';
 import usSvgUrl from '@/assets/images/us.svg';
 
 interface USAMapProps {
@@ -66,187 +67,149 @@ const stateNameMap: Record<string, string> = {
 };
 
 export function USAMap({ onStateClick, completedStates, className }: USAMapProps) {
-  const [hoveredState, setHoveredState] = useState<string | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const [svgContent, setSvgContent] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load the SVG content from the assets directory
-    fetch(usSvgUrl)
-      .then(response => response.text())
-      .then(svgText => {
-        console.log('SVG loaded successfully');
-        // Process the SVG to add interactivity
+    const loadMap = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(usSvgUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to load SVG: ${response.status}`);
+        }
+
+        const content = await response.text();
+        
+        // Parse the SVG to add styles and interactivity
         const parser = new DOMParser();
-        const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+        const svgDoc = parser.parseFromString(content, 'image/svg+xml');
         const svgElement = svgDoc.querySelector('svg');
         
-        if (svgElement) {
-          console.log('SVG element found');
-          // Set responsive attributes
-          svgElement.setAttribute('width', '100%');
-          svgElement.setAttribute('height', 'auto');
-          svgElement.style.maxHeight = '70vh';
-          svgElement.style.cursor = 'pointer';
-          
-          // Find all path elements and log them
-          const allPaths = svgElement.querySelectorAll('path');
-          console.log('Total paths found:', allPaths.length);
-          
-          // Update all state paths with proper styling
-          Object.keys(stateNameMap).forEach(stateId => {
-            const path = svgElement.querySelector(`#${stateId}`);
-            if (path) {
-              console.log('Found path for state:', stateId);
-              path.style.transition = 'all 0.2s ease';
-              path.style.strokeWidth = '0.97px';
-              path.style.stroke = 'hsl(var(--border))';
-              path.style.strokeLinejoin = 'round';
-              path.style.cursor = 'pointer';
-              
-              // Set initial fill
-              const stateName = stateNameMap[stateId];
-              const isCompleted = stateName && completedStates.has(stateName);
-              path.style.fill = isCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--muted))';
-            } else {
-              console.log('No path found for state:', stateId);
+        if (!svgElement) {
+          throw new Error('No SVG element found in loaded content');
+        }
+
+        // Style the SVG
+        svgElement.style.width = '100%';
+        svgElement.style.height = 'auto';
+        svgElement.style.display = 'block';
+        svgElement.style.maxHeight = '70vh';
+
+        // Add styles to state paths
+        const statePaths = svgElement.querySelectorAll('path[id]');
+        console.log('Found state paths:', statePaths.length);
+        
+        statePaths.forEach((pathElement) => {
+          const path = pathElement as HTMLElement;
+          const stateCode = path.id;
+          const stateName = stateNameMap[stateCode];
+          const hasQuiz = stateName && getQuizForState(stateName);
+
+          console.log(`Processing state: ${stateCode} -> ${stateName}, hasQuiz: ${!!hasQuiz}`);
+
+          if (hasQuiz) {
+            path.style.cursor = 'pointer';
+            const isCompleted = completedStates.has(stateName);
+            path.style.fill = isCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--primary))';
+            path.setAttribute('data-interactive', 'true');
+            path.style.transition = 'fill 0.2s ease';
+          } else {
+            path.style.fill = 'hsl(var(--muted))';
+            path.style.cursor = 'default';
+          }
+
+          path.style.stroke = 'hsl(var(--border))';
+          path.style.strokeWidth = '0.97px';
+          path.style.strokeLinejoin = 'round';
+
+          // Add hover effects
+          path.addEventListener('mouseenter', () => {
+            if (hasQuiz) {
+              const isCompleted = completedStates.has(stateName);
+              path.style.fill = isCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--primary)/0.8)';
             }
           });
-          
-          setSvgContent(svgElement.outerHTML);
-        }
-      })
-      .catch(error => {
-        console.error('Error loading SVG:', error);
-        // Fallback to a basic message
-        setSvgContent('<svg viewBox="0 0 1000 589" class="w-full h-auto"><text x="500" y="300" text-anchor="middle" fill="hsl(var(--muted-foreground))">Map loading failed</text></svg>');
-      });
+
+          path.addEventListener('mouseleave', () => {
+            if (hasQuiz) {
+              const isCompleted = completedStates.has(stateName);
+              path.style.fill = isCompleted ? 'hsl(var(--secondary))' : 'hsl(var(--primary))';
+            }
+          });
+        });
+
+        // Serialize back to string
+        const serializer = new XMLSerializer();
+        const styledSvgContent = serializer.serializeToString(svgElement);
+        
+        setSvgContent(styledSvgContent);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Error loading map:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        setIsLoading(false);
+      }
+    };
+
+    loadMap();
   }, [completedStates]);
 
-  const handleStateClick = useCallback((stateId: string) => {
-    console.log('handleStateClick called with:', stateId);
-    const stateName = stateNameMap[stateId];
-    console.log('State name:', stateName);
-    if (stateName) {
-      const stateInfo: StateInfo = {
-        name: stateName,
-        abbreviation: stateId
-      };
-      console.log('Calling onStateClick with:', stateInfo);
-      onStateClick(stateInfo);
-    }
-  }, [onStateClick]);
-
-
-
-  useEffect(() => {
-    if (!svgContent || !containerRef.current) return;
-
-    const container = containerRef.current;
-    const svgElement = container.querySelector('svg');
-    if (!svgElement) return;
-
-    // Add a single click handler to the SVG element using event delegation
-    const handleSVGClick = (event: Event) => {
-      const target = event.target as Element;
-      if (target && target.tagName === 'path') {
-        const stateId = target.getAttribute('id');
-        console.log('SVG click detected on element with ID:', stateId);
-        if (stateId && stateNameMap[stateId]) {
-          console.log(`Clicked on ${stateId} - ${stateNameMap[stateId]}`);
-          handleStateClick(stateId);
-        }
-      }
-    };
-
-    const handleSVGMouseOver = (event: Event) => {
-      const target = event.target as Element;
-      if (target && target.tagName === 'path') {
-        const stateId = target.getAttribute('id');
-        if (stateId && stateNameMap[stateId]) {
-          setHoveredState(stateId);
-        }
-      }
-    };
-
-    const handleSVGMouseOut = () => {
-      setHoveredState(null);
-    };
-
-    svgElement.addEventListener('click', handleSVGClick);
-    svgElement.addEventListener('mouseover', handleSVGMouseOver);
-    svgElement.addEventListener('mouseout', handleSVGMouseOut);
-
-    // Also set cursor style on all state paths
-    Object.keys(stateNameMap).forEach(stateId => {
-      const path = svgElement.querySelector(`#${stateId}`);
-      if (path) {
-        console.log(`Setting cursor for ${stateId}`);
-        (path as HTMLElement).style.cursor = 'pointer';
-      }
-    });
-
-    // Cleanup
-    return () => {
-      svgElement.removeEventListener('click', handleSVGClick);
-      svgElement.removeEventListener('mouseover', handleSVGMouseOver);
-      svgElement.removeEventListener('mouseout', handleSVGMouseOut);
-    };
-  }, [svgContent, handleStateClick]);
-
-  // Separate effect for updating fill colors
-  useEffect(() => {
-    if (!containerRef.current) return;
+  const handleClick = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    console.log('Click detected on:', target.tagName, 'ID:', target.id);
     
-    const svgElement = containerRef.current.querySelector('svg');
-    if (!svgElement) return;
-
-    Object.keys(stateNameMap).forEach(stateId => {
-      const path = svgElement.querySelector(`#${stateId}`);
-      if (path) {
-        const stateName = stateNameMap[stateId];
-        const isCompleted = stateName && completedStates.has(stateName);
-        const isHovered = hoveredState === stateId;
-        
-        let fill = 'hsl(var(--muted))';
-        if (isCompleted) fill = 'hsl(var(--secondary))';
-        else if (isHovered) fill = 'hsl(var(--primary))';
-        
-        path.style.fill = fill;
+    if (target.tagName === 'path' && target.getAttribute('data-interactive')) {
+      const stateCode = target.id;
+      const stateName = stateNameMap[stateCode];
+      console.log(`Clicked on interactive state: ${stateCode} -> ${stateName}`);
+      
+      if (stateName) {
+        const stateInfo: StateInfo = {
+          name: stateName,
+          abbreviation: stateCode
+        };
+        console.log('Calling onStateClick with:', stateInfo);
+        onStateClick(stateInfo);
       }
-    });
-  }, [completedStates, hoveredState]);
+    }
+  };
 
-
-
-  if (!svgContent) {
+  if (isLoading) {
     return (
-      <div className={cn("w-full max-w-4xl mx-auto flex items-center justify-center h-96", className)}>
-        <div className="text-muted-foreground">Loading map...</div>
+      <div className={cn("w-full max-w-4xl mx-auto", className)}>
+        <div className="flex items-center justify-center h-96">
+          <div className="text-muted-foreground">Loading USA map...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={cn("w-full max-w-4xl mx-auto", className)}>
+        <div className="flex flex-col items-center justify-center h-96 space-y-4">
+          <div className="text-destructive">Failed to load map: {error}</div>
+          <Button
+            onClick={() => {
+              setError(null);
+              setIsLoading(true);
+            }}
+            className="px-4 py-2"
+          >
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className={cn("w-full max-w-4xl mx-auto", className)}>
-      {/* Debug button for Hawaii */}
-      <div className="mb-4 text-center">
-        <Button 
-          onClick={() => {
-            console.log('Test Hawaii from map component');
-            const stateInfo: StateInfo = { name: 'Hawaii', abbreviation: 'HI' };
-            onStateClick(stateInfo);
-          }}
-          variant="outline"
-          size="sm"
-        >
-          Test Hawaii (Map Component)
-        </Button>
-      </div>
-      
       <div 
-        ref={containerRef}
-        className="w-full"
+        className="w-full" 
+        onClick={handleClick}
         dangerouslySetInnerHTML={{ __html: svgContent }}
       />
       
@@ -254,7 +217,11 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
       <div className="flex items-center justify-center gap-6 mt-4 text-sm">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-muted border border-border rounded-sm"></div>
-          <span className="text-muted-foreground">Not Started</span>
+          <span className="text-muted-foreground">No Quiz Available</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 bg-primary rounded-sm"></div>
+          <span className="text-muted-foreground">Quiz Available</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 bg-secondary rounded-sm"></div>
