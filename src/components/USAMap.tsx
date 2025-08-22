@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { type StateInfo } from '@/lib/states';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import usSvgUrl from '@/assets/images/us.svg';
 
 interface USAMapProps {
@@ -145,51 +146,42 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
     const svgElement = container.querySelector('svg');
     if (!svgElement) return;
 
-    console.log('Setting up event listeners on SVG');
-
-    // Store the listener functions so we can remove them properly
-    const clickListeners = new Map<Element, () => void>();
-    const mouseEnterListeners = new Map<Element, () => void>();
-    const mouseLeaveListeners = new Map<Element, () => void>();
-
-    // Add click listener to all path elements directly
-    const allPaths = svgElement.querySelectorAll('path[id]');
-    console.log('Found paths with IDs:', allPaths.length);
-    
-    allPaths.forEach((path) => {
-      const stateId = path.id;
-      if (stateNameMap[stateId]) {
-        console.log('Adding click listener to:', stateId);
+    // Simplified event handling - directly add click listeners to each state path
+    Object.keys(stateNameMap).forEach(stateId => {
+      const path = svgElement.querySelector(`#${stateId}`);
+      if (path) {
+        console.log(`Adding event listeners to ${stateId} (${stateNameMap[stateId]})`);
         
         const clickHandler = () => {
-          console.log('Direct click on path:', stateId);
+          console.log(`Clicked on ${stateId} - ${stateNameMap[stateId]}`);
           handleStateClick(stateId);
         };
         
         const mouseEnterHandler = () => setHoveredState(stateId);
         const mouseLeaveHandler = () => setHoveredState(null);
         
-        // Store references for cleanup
-        clickListeners.set(path, clickHandler);
-        mouseEnterListeners.set(path, mouseEnterHandler);
-        mouseLeaveListeners.set(path, mouseLeaveHandler);
-        
         path.addEventListener('click', clickHandler);
         path.addEventListener('mouseenter', mouseEnterHandler);
         path.addEventListener('mouseleave', mouseLeaveHandler);
+        
+        // Store handlers for cleanup
+        (path as any)._clickHandler = clickHandler;
+        (path as any)._mouseEnterHandler = mouseEnterHandler;
+        (path as any)._mouseLeaveHandler = mouseLeaveHandler;
+      } else {
+        console.log(`No path found for state: ${stateId}`);
       }
     });
 
     // Cleanup function
     return () => {
-      allPaths.forEach((path) => {
-        const clickHandler = clickListeners.get(path);
-        const mouseEnterHandler = mouseEnterListeners.get(path);
-        const mouseLeaveHandler = mouseLeaveListeners.get(path);
-        
-        if (clickHandler) path.removeEventListener('click', clickHandler);
-        if (mouseEnterHandler) path.removeEventListener('mouseenter', mouseEnterHandler);
-        if (mouseLeaveHandler) path.removeEventListener('mouseleave', mouseLeaveHandler);
+      Object.keys(stateNameMap).forEach(stateId => {
+        const path = svgElement.querySelector(`#${stateId}`);
+        if (path && (path as any)._clickHandler) {
+          path.removeEventListener('click', (path as any)._clickHandler);
+          path.removeEventListener('mouseenter', (path as any)._mouseEnterHandler);
+          path.removeEventListener('mouseleave', (path as any)._mouseLeaveHandler);
+        }
       });
     };
   }, [svgContent, handleStateClick]);
@@ -229,6 +221,21 @@ export function USAMap({ onStateClick, completedStates, className }: USAMapProps
 
   return (
     <div className={cn("w-full max-w-4xl mx-auto", className)}>
+      {/* Debug button for Hawaii */}
+      <div className="mb-4 text-center">
+        <Button 
+          onClick={() => {
+            console.log('Test Hawaii from map component');
+            const stateInfo: StateInfo = { name: 'Hawaii', abbreviation: 'HI' };
+            onStateClick(stateInfo);
+          }}
+          variant="outline"
+          size="sm"
+        >
+          Test Hawaii (Map Component)
+        </Button>
+      </div>
+      
       <div 
         ref={containerRef}
         className="w-full"

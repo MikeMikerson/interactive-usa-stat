@@ -23,11 +23,8 @@ export function QuizDialog({ open, onOpenChange, stateName, quiz, onQuizComplete
   const [score, setScore] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
 
-  console.log('QuizDialog render - open:', open, 'stateName:', stateName, 'quiz:', quiz);
-
   useEffect(() => {
     if (open && quiz) {
-      console.log('QuizDialog useEffect - resetting quiz state');
       setCurrentQuestion(0);
       setSelectedAnswer(null);
       setShowFeedback(false);
